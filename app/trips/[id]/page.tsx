@@ -1,10 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 import { db } from "@/db";
 import { trips } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import DownloadPdfButton from "./DownloadPdfButton";
+import PrintButton from "./PrintButton";
 
 export default async function TripPage({
   params,
@@ -64,29 +65,23 @@ export default async function TripPage({
               </p>
             )}
           </div>
-          <DownloadPdfButton
+          <PrintButton
             title={trip.title ?? "Itinerary"}
             itinerary={trip.itinerary ?? ""}
             dateRange={
               trip.startDate || trip.endDate
                 ? [
-                    trip.startDate
-                      ? new Date(trip.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
-                      : "",
-                    trip.endDate
-                      ? new Date(trip.endDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
-                      : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" – ")
+                    trip.startDate ? new Date(trip.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "",
+                    trip.endDate ? new Date(trip.endDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "",
+                  ].filter(Boolean).join(" – ")
                 : undefined
             }
           />
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-200 p-6">
-          <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap leading-relaxed">
-            {trip.itinerary}
+          <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
+            <ReactMarkdown>{trip.itinerary ?? ""}</ReactMarkdown>
           </div>
         </div>
       </main>

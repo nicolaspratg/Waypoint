@@ -30,7 +30,13 @@ For each day include:
 - Specific places, landmarks, or restaurants worth visiting
 - Any practical tips (best time to visit, booking needed, etc.)
 
-Keep it practical and specific. Format each day clearly with a "Day N — [Date or Theme]" header.`;
+Format the output in Markdown:
+- Use ## for each day header (e.g. ## Day 1 — Arrival & City Center)
+- Use ### for Morning, Afternoon, Evening sections
+- Use bullet points for activities and tips
+- Bold (**) important names, places, or restaurants
+
+Keep it practical and specific.`;
 
   const stream = client.messages.stream({
     model: "claude-sonnet-4-6",

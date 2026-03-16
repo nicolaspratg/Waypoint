@@ -2,6 +2,7 @@
 
 import { useState, useRef, useTransition } from "react";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 import { saveTrip } from "./actions";
 
 export default function PlanPage() {
@@ -171,8 +172,8 @@ export default function PlanPage() {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Your itinerary
             </h2>
-            <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap leading-relaxed">
-              {itinerary}
+            <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
+              <ReactMarkdown>{itinerary}</ReactMarkdown>
             </div>
           </div>
         )}
