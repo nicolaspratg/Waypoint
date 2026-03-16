@@ -1,0 +1,177 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.phase-btn { background: none; border: none; cursor: pointer; text-align: left; width: 100%; padding: 10px 12px; border-radius: var(--border-radius-md); transition: background 0.15s; }
+.phase-btn:hover { background: var(--color-background-secondary); }
+.phase-btn.active { background: var(--color-background-secondary); }
+.task-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.task-row:last-child { border-bottom: none; }
+.tag { font-size: 11px; padding: 2px 7px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+.chip { font-size: 11px; padding: 3px 9px; border-radius: 20px; border: 0.5px solid var(--color-border-secondary); color: var(--color-text-secondary); }
+.nav-btn { background: none; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 6px 14px; cursor: pointer; font-size: 13px; color: var(--color-text-secondary); transition: background 0.15s; }
+.nav-btn:hover:not(:disabled) { background: var(--color-background-secondary); }
+.nav-btn:disabled { opacity: 0.3; cursor: default; }
+.dot { width: 8px; height: 8px; border-radius: 50%; cursor: pointer; border: none; transition: background 0.2s; }
+</style>
+
+<div style="display: grid; grid-template-columns: 200px 1fr; gap: 0; min-height: 420px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; background: var(--color-background-primary);">
+
+  <!-- Sidebar -->
+  <div style="border-right: 0.5px solid var(--color-border-tertiary); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; background: var(--color-background-secondary);">
+    <p style="font-size: 11px; color: var(--color-text-tertiary); letter-spacing: 0.08em; padding: 4px 12px 10px;">PHASES</p>
+    <button class="phase-btn active" data-phase="0" onclick="setPhase(0)">
+      <span style="font-size: 10px; color: var(--color-text-tertiary);">01</span>
+      <p style="font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-top: 2px;">Ship the MVP</p>
+      <p style="font-size: 11px; color: var(--color-text-tertiary);">Week 1–2</p>
+    </button>
+    <button class="phase-btn" data-phase="1" onclick="setPhase(1)">
+      <span style="font-size: 10px; color: var(--color-text-tertiary);">02</span>
+      <p style="font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-top: 2px;">Add auth</p>
+      <p style="font-size: 11px; color: var(--color-text-tertiary);">Week 2–3</p>
+    </button>
+    <button class="phase-btn" data-phase="2" onclick="setPhase(2)">
+      <span style="font-size: 10px; color: var(--color-text-tertiary);">03</span>
+      <p style="font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-top: 2px;">Add payments</p>
+      <p style="font-size: 11px; color: var(--color-text-tertiary);">Week 3–4</p>
+    </button>
+    <button class="phase-btn" data-phase="3" onclick="setPhase(3)">
+      <span style="font-size: 10px; color: var(--color-text-tertiary);">04</span>
+      <p style="font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-top: 2px;">Launch</p>
+      <p style="font-size: 11px; color: var(--color-text-tertiary);">Week 4–5</p>
+    </button>
+    <button class="phase-btn" data-phase="4" onclick="setPhase(4)">
+      <span style="font-size: 10px; color: var(--color-text-tertiary);">05</span>
+      <p style="font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-top: 2px;">Formalize</p>
+      <p style="font-size: 11px; color: var(--color-text-tertiary);">When revenue flows</p>
+    </button>
+  </div>
+
+  <!-- Main panel -->
+  <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;" id="main-panel">
+  </div>
+</div>
+
+<script>
+const phases = [
+  {
+    num: "01", title: "Ship the MVP", timeline: "Week 1–2",
+    milestone: "Product is live on the internet",
+    color: "#BA7517", bg: "#FAEEDA",
+    tasks: [
+      { label: "Move API call to Next.js route", tag: "backend", tc: "#185FA5", tb: "#E6F1FB" },
+      { label: "Buy domain (~$12/yr on Namecheap)", tag: "infra", tc: "#0F6E56", tb: "#E1F5EE" },
+      { label: "Deploy frontend on Vercel", tag: "infra", tc: "#0F6E56", tb: "#E1F5EE" },
+      { label: "Deploy backend on Railway", tag: "infra", tc: "#0F6E56", tb: "#E1F5EE" },
+      { label: "Build landing page", tag: "frontend", tc: "#534AB7", tb: "#EEEDFE" },
+    ],
+    stack: ["Next.js", "Vercel", "Railway"],
+  },
+  {
+    num: "02", title: "Add auth", timeline: "Week 2–3",
+    milestone: "You know who your users are",
+    color: "#185FA5", bg: "#E6F1FB",
+    tasks: [
+      { label: "Install & configure Clerk", tag: "auth", tc: "#534AB7", tb: "#EEEDFE" },
+      { label: "Set up Postgres via Supabase", tag: "db", tc: "#0F6E56", tb: "#E1F5EE" },
+      { label: "Create users + trips schema (2 tables)", tag: "db", tc: "#0F6E56", tb: "#E1F5EE" },
+      { label: "Add free tier quota logic (3 trips/mo)", tag: "backend", tc: "#185FA5", tb: "#E6F1FB" },
+      { label: "Protect /plan route via middleware", tag: "auth", tc: "#534AB7", tb: "#EEEDFE" },
+    ],
+    stack: ["Clerk", "Drizzle ORM", "Postgres"],
+  },
+  {
+    num: "03", title: "Add payments", timeline: "Week 3–4",
+    milestone: "Someone can actually pay you",
+    color: "#993C1D", bg: "#FAECE7",
+    tasks: [
+      { label: "Create product + price in Stripe dashboard", tag: "stripe", tc: "#534AB7", tb: "#EEEDFE" },
+      { label: "Build Stripe Checkout flow", tag: "stripe", tc: "#534AB7", tb: "#EEEDFE" },
+      { label: "Webhook → update user.plan in DB", tag: "backend", tc: "#185FA5", tb: "#E6F1FB" },
+      { label: "Build paywall modal on frontend", tag: "frontend", tc: "#534AB7", tb: "#EEEDFE" },
+      { label: "Test full free → paid upgrade flow", tag: "qa", tc: "#3B6D11", tb: "#EAF3DE" },
+    ],
+    stack: ["Stripe", "Webhooks", "Postgres"],
+  },
+  {
+    num: "04", title: "Launch", timeline: "Week 4–5",
+    milestone: "Real users, real feedback",
+    color: "#3B6D11", bg: "#EAF3DE",
+    tasks: [
+      { label: "Post on r/solotravel, r/digitalnomad", tag: "marketing", tc: "#0F6E56", tb: "#E1F5EE" },
+      { label: "Offer 20 lifetime Pro deals at $20", tag: "revenue", tc: "#BA7517", tb: "#FAEEDA" },
+      { label: "Record a 60s demo video", tag: "marketing", tc: "#0F6E56", tb: "#E1F5EE" },
+      { label: "Collect feedback from first 10 users", tag: "product", tc: "#534AB7", tb: "#EEEDFE" },
+      { label: "Set usage alerts on Anthropic dashboard", tag: "infra", tc: "#185FA5", tb: "#E6F1FB" },
+    ],
+    stack: ["Reddit", "Twitter/X", "Product Hunt"],
+  },
+  {
+    num: "05", title: "Formalize", timeline: "When revenue flows",
+    milestone: "$1k MRR target",
+    color: "#534AB7", bg: "#EEEDFE",
+    tasks: [
+      { label: "Evaluate US LLC via Stripe Atlas or Doola", tag: "legal", tc: "#993C1D", tb: "#FAECE7" },
+      { label: "Set up USD business account", tag: "legal", tc: "#993C1D", tb: "#FAECE7" },
+      { label: "Add PDF export feature", tag: "product", tc: "#534AB7", tb: "#EEEDFE" },
+      { label: "Add saved trips dashboard", tag: "product", tc: "#534AB7", tb: "#EEEDFE" },
+      { label: "Consider affiliate links (Booking, Viator)", tag: "revenue", tc: "#BA7517", tb: "#FAEEDA" },
+    ],
+    stack: ["Stripe Atlas", "Doola", "PDF export"],
+  },
+];
+
+let current = 0;
+
+function setPhase(i) {
+  current = i;
+  document.querySelectorAll('.phase-btn').forEach((b, idx) => {
+    b.classList.toggle('active', idx === i);
+  });
+  render();
+}
+
+function render() {
+  const p = phases[current];
+  const panel = document.getElementById('main-panel');
+  panel.innerHTML = `
+    <div>
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+        <span style="font-size:11px; color:var(--color-text-tertiary);">${p.num}</span>
+        <h2 style="font-size:18px; font-weight:500; color:var(--color-text-primary);">${p.title}</h2>
+        <span style="font-size:12px; color:var(--color-text-tertiary);">${p.timeline}</span>
+      </div>
+      <div style="display:inline-flex; align-items:center; gap:8px; background:${p.bg}; padding:6px 12px; border-radius:var(--border-radius-md);">
+        <span style="font-size:11px; color:${p.color}; font-weight:500;">Milestone:</span>
+        <span style="font-size:12px; color:${p.color};">${p.milestone}</span>
+      </div>
+    </div>
+
+    <div style="flex:1;">
+      ${p.tasks.map(t => `
+        <div class="task-row">
+          <span style="color:var(--color-text-tertiary); font-size:13px; margin-top:1px; flex-shrink:0;">→</span>
+          <span style="font-size:13px; color:var(--color-text-primary); flex:1; line-height:1.5;">${t.label}</span>
+          <span class="tag" style="background:${t.tb}; color:${t.tc};">${t.tag}</span>
+        </div>
+      `).join('')}
+    </div>
+
+    <div>
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <span style="font-size:11px; color:var(--color-text-tertiary);">Stack</span>
+        ${p.stack.map(s => `<span class="chip">${s}</span>`).join('')}
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; border-top:0.5px solid var(--color-border-tertiary); padding-top:14px;">
+      <button class="nav-btn" onclick="setPhase(${current - 1})" ${current === 0 ? 'disabled' : ''}>← prev</button>
+      <div style="display:flex; gap:8px; align-items:center;">
+        ${phases.map((ph, i) => `<button class="dot" onclick="setPhase(${i})" style="background:${i === current ? ph.color : 'var(--color-border-secondary)'}"></button>`).join('')}
+      </div>
+      <button class="nav-btn" onclick="setPhase(${current + 1})" ${current === phases.length - 1 ? 'disabled' : ''}>next →</button>
+    </div>
+  `;
+}
+
+render();
+</script>
