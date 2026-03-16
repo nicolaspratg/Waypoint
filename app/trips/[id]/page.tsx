@@ -4,6 +4,7 @@ import Link from "next/link";
 import { db } from "@/db";
 import { trips } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import DownloadPdfButton from "./DownloadPdfButton";
 
 export default async function TripPage({
   params,
@@ -40,27 +41,47 @@ export default async function TripPage({
       </header>
 
       <main className="max-w-3xl mx-auto px-6 py-10">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">{trip.title}</h1>
-          {(trip.startDate || trip.endDate) && (
-            <p className="text-sm text-gray-500 mt-1">
-              {trip.startDate
-                ? new Date(trip.startDate).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })
-                : ""}
-              {trip.startDate && trip.endDate ? " – " : ""}
-              {trip.endDate
-                ? new Date(trip.endDate).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })
-                : ""}
-            </p>
-          )}
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{trip.title}</h1>
+            {(trip.startDate || trip.endDate) && (
+              <p className="text-sm text-gray-500 mt-1">
+                {trip.startDate
+                  ? new Date(trip.startDate).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })
+                  : ""}
+                {trip.startDate && trip.endDate ? " – " : ""}
+                {trip.endDate
+                  ? new Date(trip.endDate).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })
+                  : ""}
+              </p>
+            )}
+          </div>
+          <DownloadPdfButton
+            title={trip.title ?? "Itinerary"}
+            itinerary={trip.itinerary ?? ""}
+            dateRange={
+              trip.startDate || trip.endDate
+                ? [
+                    trip.startDate
+                      ? new Date(trip.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+                      : "",
+                    trip.endDate
+                      ? new Date(trip.endDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+                      : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" – ")
+                : undefined
+            }
+          />
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-200 p-6">
