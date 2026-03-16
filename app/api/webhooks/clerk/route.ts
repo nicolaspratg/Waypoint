@@ -34,7 +34,7 @@ export async function POST(req: Request) {
   if (event.type === "user.created") {
     const { id, email_addresses } = event.data;
     const email = email_addresses[0]?.email_address ?? "";
-    await db.insert(users).values({ clerkId: id, email });
+    await db.insert(users).values({ clerkId: id, email }).onConflictDoNothing();
   }
 
   return new Response(null, { status: 200 });
