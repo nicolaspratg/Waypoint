@@ -17,6 +17,7 @@ export const trips = pgTable("trips", {
   destination: text("destination").notNull(),
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
+  itinerary: text("itinerary"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

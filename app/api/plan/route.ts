@@ -34,7 +34,7 @@ Keep it practical and specific. Format each day clearly with a "Day N — [Date 
 
   const stream = client.messages.stream({
     model: "claude-sonnet-4-6",
-    max_tokens: 2048,
+    max_tokens: 4096,
     messages: [{ role: "user", content: prompt }],
   });
 

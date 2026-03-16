@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useTransition } from "react";
 import Link from "next/link";
+import { saveTrip } from "./actions";
 
 export default function PlanPage() {
   const [destination, setDestination] = useState("");
@@ -11,6 +12,7 @@ export default function PlanPage() {
   const [itinerary, setItinerary] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isPending, startTransition] = useTransition();
   const abortRef = useRef<AbortController | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -55,6 +57,12 @@ export default function PlanPage() {
   function handleStop() {
     abortRef.current?.abort();
     setLoading(false);
+  }
+
+  function handleSave() {
+    startTransition(() =>
+      saveTrip({ destination, startDate, endDate, itinerary })
+    );
   }
 
   return (
@@ -160,9 +168,20 @@ export default function PlanPage() {
 
         {itinerary && (
           <div className="mt-8 bg-white rounded-2xl border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Your itinerary
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Your itinerary
+              </h2>
+              {!loading && (
+                <button
+                  onClick={handleSave}
+                  disabled={isPending}
+                  className="bg-black text-white text-sm font-medium px-5 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isPending ? "Saving…" : "Save trip"}
+                </button>
+              )}
+            </div>
             <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap leading-relaxed">
               {itinerary}
             </div>
