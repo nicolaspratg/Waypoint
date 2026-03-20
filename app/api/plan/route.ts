@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { generations } from "@/db/schema";
+import { generations, users } from "@/db/schema";
 import { eq, and, gte, sql } from "drizzle-orm";
 
 const client = new Anthropic();
@@ -17,41 +17,46 @@ export async function POST(req: Request) {
     return new Response("destination is required", { status: 400 });
   }
 
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
+  const [user] = await db.select().from(users).where(eq(users.clerkId, userId)).limit(1);
+  const isAdmin = user?.isAdmin ?? false;
 
-  // Check if this destination was already generated this month (free regeneration)
-  const existingGeneration = await db
-    .select()
-    .from(generations)
-    .where(
-      and(
-        eq(generations.userId, userId),
-        eq(sql`lower(${generations.destination})`, destination.toLowerCase()),
-        gte(generations.createdAt, startOfMonth)
-      )
-    )
-    .limit(1);
+  if (!isAdmin) {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
 
-  const isRegeneration = existingGeneration.length > 0;
-
-  if (!isRegeneration) {
-    // Count distinct destinations this month
-    const result = await db
-      .selectDistinct({ destination: generations.destination })
+    // Check if this destination was already generated this month (free regeneration)
+    const existingGeneration = await db
+      .select()
       .from(generations)
-      .where(and(eq(generations.userId, userId), gte(generations.createdAt, startOfMonth)));
+      .where(
+        and(
+          eq(generations.userId, userId),
+          eq(sql`lower(${generations.destination})`, destination.toLowerCase()),
+          gte(generations.createdAt, startOfMonth)
+        )
+      )
+      .limit(1);
 
-    if (result.length >= FREE_TIER_LIMIT) {
-      return new Response(
-        JSON.stringify({ error: "quota_exceeded", used: result.length, limit: FREE_TIER_LIMIT }),
-        { status: 429, headers: { "Content-Type": "application/json" } }
-      );
+    const isRegeneration = existingGeneration.length > 0;
+
+    if (!isRegeneration) {
+      // Count distinct destinations this month
+      const result = await db
+        .selectDistinct({ destination: generations.destination })
+        .from(generations)
+        .where(and(eq(generations.userId, userId), gte(generations.createdAt, startOfMonth)));
+
+      if (result.length >= FREE_TIER_LIMIT) {
+        return new Response(
+          JSON.stringify({ error: "quota_exceeded", used: result.length, limit: FREE_TIER_LIMIT }),
+          { status: 429, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      // Record this generation
+      await db.insert(generations).values({ userId, destination });
     }
-
-    // Record this generation
-    await db.insert(generations).values({ userId, destination });
   }
 
   const dateRange =
