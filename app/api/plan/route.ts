@@ -85,6 +85,8 @@ Keep it practical and specific.${refinementLine}`;
   const stream = client.messages.stream({
     model: "claude-sonnet-4-6",
     max_tokens: 4096,
+    system:
+      "You are a travel itinerary assistant. When the user provides a destination, silently interpret it as best you can — including misspellings, alternate spellings, or names in other languages (e.g. 'Islandia' → Iceland, 'Espagne' → Spain). Never comment on the spelling, never ask for clarification, never explain your interpretation. Go straight into the itinerary.",
     messages: [{ role: "user", content: prompt }],
   });
 
