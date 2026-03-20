@@ -23,3 +23,10 @@ export const trips = pgTable("trips", {
 
 export type Trip = typeof trips.$inferSelect;
 export type NewTrip = typeof trips.$inferInsert;
+
+export const generations = pgTable("generations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id").notNull(),
+  destination: text("destination").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

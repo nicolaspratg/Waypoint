@@ -1,16 +1,57 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { auth } from "@clerk/nextjs/server";
+import { db } from "@/db";
+import { generations } from "@/db/schema";
+import { eq, and, gte, sql } from "drizzle-orm";
 
 const client = new Anthropic();
+const FREE_TIER_LIMIT = 3;
 
 export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return new Response("Unauthorized", { status: 401 });
 
-  const { destination, startDate, endDate, interests } = await req.json();
+  const { destination, startDate, endDate, interests, refinement } = await req.json();
 
   if (!destination) {
     return new Response("destination is required", { status: 400 });
+  }
+
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  // Check if this destination was already generated this month (free regeneration)
+  const existingGeneration = await db
+    .select()
+    .from(generations)
+    .where(
+      and(
+        eq(generations.userId, userId),
+        eq(sql`lower(${generations.destination})`, destination.toLowerCase()),
+        gte(generations.createdAt, startOfMonth)
+      )
+    )
+    .limit(1);
+
+  const isRegeneration = existingGeneration.length > 0;
+
+  if (!isRegeneration) {
+    // Count distinct destinations this month
+    const result = await db
+      .selectDistinct({ destination: generations.destination })
+      .from(generations)
+      .where(and(eq(generations.userId, userId), gte(generations.createdAt, startOfMonth)));
+
+    if (result.length >= FREE_TIER_LIMIT) {
+      return new Response(
+        JSON.stringify({ error: "quota_exceeded", used: result.length, limit: FREE_TIER_LIMIT }),
+        { status: 429, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Record this generation
+    await db.insert(generations).values({ userId, destination });
   }
 
   const dateRange =
@@ -22,6 +63,9 @@ export async function POST(req: Request) {
 
   const interestLine =
     interests?.trim() ? `\nTraveler interests: ${interests}` : "";
+
+  const refinementLine =
+    refinement?.trim() ? `\n\nAdditional instructions for this version: ${refinement}` : "";
 
   const prompt = `Create a detailed day-by-day travel itinerary for ${destination}${dateRange ? ` ${dateRange}` : ""}.${interestLine}
 
@@ -36,7 +80,7 @@ Format the output in Markdown:
 - Use bullet points for activities and tips
 - Bold (**) important names, places, or restaurants
 
-Keep it practical and specific.`;
+Keep it practical and specific.${refinementLine}`;
 
   const stream = client.messages.stream({
     model: "claude-sonnet-4-6",

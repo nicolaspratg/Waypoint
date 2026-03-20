@@ -3,21 +3,34 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { db } from "@/db";
-import { trips } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { trips, generations } from "@/db/schema";
+import { eq, desc, and, gte } from "drizzle-orm";
+
+const FREE_TIER_LIMIT = 3;
 
 export default async function DashboardPage() {
   const { userId } = await auth();
   if (!userId) redirect("/");
 
-  const [user, userTrips] = await Promise.all([
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const [user, userTrips, generationsThisMonth] = await Promise.all([
     currentUser(),
     db
       .select()
       .from(trips)
       .where(eq(trips.userId, userId))
       .orderBy(desc(trips.createdAt)),
+    db
+      .selectDistinct({ destination: generations.destination })
+      .from(generations)
+      .where(and(eq(generations.userId, userId), gte(generations.createdAt, startOfMonth))),
   ]);
+
+  const usedThisMonth = generationsThisMonth.length;
+  const remaining = Math.max(0, FREE_TIER_LIMIT - usedThisMonth);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -40,12 +53,21 @@ export default async function DashboardPage() {
       <main className="max-w-5xl mx-auto px-6 py-10">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Your Trips</h1>
-          <Link
-            href="/plan"
-            className="bg-black text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            + New Trip
-          </Link>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-400">
+              {remaining === 0 ? (
+                <span className="text-red-500 font-medium">0 trips left this month</span>
+              ) : (
+                <span>{remaining} free trip{remaining === 1 ? "" : "s"} left this month</span>
+              )}
+            </span>
+            <Link
+              href="/plan"
+              className="bg-black text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+            >
+              + New Trip
+            </Link>
+          </div>
         </div>
 
         {userTrips.length === 0 ? (
