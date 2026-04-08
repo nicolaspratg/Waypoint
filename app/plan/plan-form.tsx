@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useTransition, useEffect } from "react";
+import { DateRangePicker } from "./date-range-picker";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import { saveTrip } from "./actions";
@@ -161,30 +162,12 @@ export default function PlanForm({ remaining }: { remaining: number }) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Start date
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-gray-400 transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                End date
-              </label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-gray-400 transition-colors"
-              />
-            </div>
-          </div>
+          <DateRangePicker
+            startDate={startDate}
+            endDate={endDate}
+            onStartChange={setStartDate}
+            onEndChange={setEndDate}
+          />
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
